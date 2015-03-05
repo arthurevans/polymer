@@ -1343,9 +1343,45 @@ Repeating templates is moved to a custom element (HTMLTemplateElement type exten
 
 ## Array notification
 
-This area is in high flux.  Arrays bound to `x-repeat` are currently observed using `Array.observe` (or equivalent shim) and `x-repeat` will reflect changes to array mutations (push, pop, shift, unshift, splice) asynchronously.
+This area is in high flux.  Arrays bound to `x-repeat` are currently observed using `Array.observe` (or 
+equivalent shim) and `x-repeat` will reflect changes to array mutations (push, pop, shift, unshift, splice) 
+asynchronously.
 
-**In-place sort of array is not supported**.  Sorting/filtering will likely be provided as a feature of `x-repeat` (and possibly other array-aware elements such as `x-list`) in the future.
+**In-place sorting and filtering of arrays is implemented in `x-repeat`.** To filter an `x-repeat`, set 
+its `filter` property to a filter function.  The filter function should accepts a single item and return
+`true` to include the item, `false` to omit it:
+
+```js
+favFilter: function(item) {
+  if (item.favorite) {
+    return true;
+  }
+  return false;
+}
+```
+
+To sort an `x-repeat`, set its `sort` property to a comparison function. For example:
+
+```js
+sortMe: function(item1, item2) {
+  return item1.name.localeCompare(item2.name);
+}
+```
+
+Using `sort` and `filter` on `x-repeat` changes how the data is displayed _without mutating the original array_.
+
+Note that if the `sort` or `filter` function depends on a property of one of the items in the array, 
+you must configure the `x-repeat` to observe changes to the property by specifying an `observe` list:
+
+```html
+<template is="x-repeat" items="{{users}}" observe="name favorite">
+```
+
+The `observe` attribute value is a space-separated list of property names. If one of these properties changes
+on any of the items in the list, the `x-repeat` is re-sorted and re-filtered. (For example, in this case, if 
+`users[1].name` changes value, the `x-repeat` is re-sorted and re-filtered.)
+
+These features may be added to other array-aware elements such as `x-list` in the future.
 
 Implementation and usage details will likely change, stay tuned.
 
